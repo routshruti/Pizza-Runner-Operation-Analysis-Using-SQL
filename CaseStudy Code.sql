@@ -2,21 +2,21 @@
 	
 -- Q1. How many pizzas were ordered?
 	
-SELECT 
-	COUNT(pizza_id) AS number_of_pizzas
+SELECT
+     COUNT(pizza_id) AS number_of_pizzas
 FROM customer_orders
 
 -- Q2. How many unique customer orders were made?
 
 SELECT 
-	COUNT(DISTINCT order_id) AS unique_orders
+     COUNT(DISTINCT order_id) AS unique_orders
 FROM customer_orders
 
 -- Q3. How many successful orders were delivered by each runner?
 
-SELECT 
-	runner_id,
-	COUNT(order_id) AS delivered_orders
+SELECT
+     runner_id,
+     COUNT(order_id) AS delivered_orders
 FROM runner_orders
 WHERE cancellation IS NULL
 GROUP BY runner_id
@@ -24,8 +24,8 @@ GROUP BY runner_id
 -- Q4. How many of each type of pizza was delivered?
 
 SELECT
-	pizza_id, 
-	COUNT(pizza_id) AS quantity_delivered
+     pizza_id, 
+     COUNT(pizza_id) AS quantity_delivered
 FROM customer_orders AS co
 JOIN runner_orders AS ro
   ON co.order_id = ro.order_id
@@ -35,13 +35,13 @@ GROUP BY pizza_id
 -- Q5. How many Vegetarian and Meatlovers were ordered by each customer?
 
 SELECT 
-	customer_id,
-	SUM(CASE WHEN pizza_name = 'Vegetarian' THEN 1
-	         ELSE 0
-	    END) AS Vegetarian,
-	SUM(CASE WHEN pizza_name = 'Meatlovers' THEN 1
-	         ELSE 0
-	    END) AS Meatlovers
+     customer_id,
+     SUM(CASE WHEN pizza_name = 'Vegetarian' THEN 1
+	      ELSE 0
+	 END) AS Vegetarian,
+     SUM(CASE WHEN pizza_name = 'Meatlovers' THEN 1
+	      ELSE 0
+	 END) AS Meatlovers
 FROM customer_orders AS co
 JOIN pizza_names AS pn
   ON co.pizza_id = pn.pizza_id
@@ -51,8 +51,8 @@ ORDER BY customer_id
 -- Q6. What was the maximum number of pizzas delivered in a single order?
 
 SELECT 
-	ro.order_id,
-	COUNT(ro.order_id) AS max_pizzas
+     ro.order_id,
+     COUNT(ro.order_id) AS max_pizzas
 FROM customer_orders AS co
 JOIN runner_orders AS ro
   ON co.order_id = ro.order_id
@@ -64,20 +64,20 @@ LIMIT 1
 -- Q7. For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
 
 WITH cte AS
-	(SELECT order_id, customer_id, exclusions, extras
-     FROM customer_orders AS co
-     LEFT JOIN pizza_exclusions AS el
-	   ON co.serial_no = el.serial_no
-	 LEFT JOIN pizza_extras AS et
-	   ON co.serial_no = et.serial_no)
+     (SELECT order_id, customer_id, exclusions, extras
+      FROM customer_orders AS co
+      LEFT JOIN pizza_exclusions AS el
+	    ON co.serial_no = el.serial_no
+      LEFT JOIN pizza_extras AS et
+	    ON co.serial_no = et.serial_no)
 SELECT
-	customer_id,
-	SUM(CASE WHEN exclusions IS NOT NULL OR extras IS NOT NULL THEN 1
-	         ELSE 0
-	    END) AS change,
-	SUM(CASE WHEN exclusions IS NULL AND extras IS NULL THEN 1
-	         ELSE 0
-	    END) AS no_change
+     customer_id,
+     SUM(CASE WHEN exclusions IS NOT NULL OR extras IS NOT NULL THEN 1
+	      ELSE 0
+	 END) AS change,
+     SUM(CASE WHEN exclusions IS NULL AND extras IS NULL THEN 1
+	      ELSE 0
+	 END) AS no_change
 FROM CTE AS c
 JOIN runner_orders AS ro
   ON c.order_id = ro.order_id
@@ -89,7 +89,7 @@ ORDER BY customer_id ASC
 -- Q8. How many pizzas were delivered that had both exclusions and extras?
 
 SELECT
-	COUNT(DISTINCT pizza_id) AS with_extras_and_exclusions
+     COUNT(DISTINCT pizza_id) AS with_extras_and_exclusions
 FROM customer_orders AS co
 LEFT JOIN pizza_exclusions AS el
   ON co.serial_no = el.serial_no
@@ -104,8 +104,8 @@ AND extras IS NOT NULL
 -- Q9. What was the total volume of pizzas ordered for each hour of the day?
 	
 SELECT 
-	EXTRACT(HOUR FROM order_time) AS hour, 
-	COUNT(order_id) AS orders_per_hour
+     EXTRACT(HOUR FROM order_time) AS hour, 
+     COUNT(order_id) AS orders_per_hour
 FROM customer_orders
 GROUP BY hour
 ORDER BY orders_per_hour DESC
@@ -124,8 +124,8 @@ ORDER BY orders_per_day DESC
 -- Q1. What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?
 
 SELECT
-	runner_id,
-	round(AVG(EXTRACT(epoch FROM (pickup_time - order_time))/60),0) AS avg_arrival_minutes
+     runner_id,
+     round(AVG(EXTRACT(epoch FROM (pickup_time - order_time))/60),0) AS avg_arrival_minutes
 FROM runner_orders AS ro
 JOIN customer_orders AS co
   ON ro.order_id = co.order_id
@@ -135,25 +135,25 @@ GROUP BY runner_id
 
 WITH cte AS
 	(SELECT
-	    ro.order_id,
-	    COUNT(pizza_id) AS number_of_pizzas, 
-	    EXTRACT(epoch FROM (pickup_time - order_time))/60 AS preparation_time
-     FROM runner_orders AS ro
-     JOIN customer_orders AS co
-       ON ro.order_id = co.order_id
-     WHERE cancellation IS NULL
-     GROUP BY ro.order_id, pickup_time, order_time)
+	      ro.order_id,
+	      COUNT(pizza_id) AS number_of_pizzas, 
+	      EXTRACT(epoch FROM (pickup_time - order_time))/60 AS preparation_time
+         FROM runner_orders AS ro
+         JOIN customer_orders AS co
+           ON ro.order_id = co.order_id
+         WHERE cancellation IS NULL
+         GROUP BY ro.order_id, pickup_time, order_time)
 SELECT
-	number_of_pizzas,
-	ROUND(AVG(preparation_time),0) AS avg_preparation_minutes
+     number_of_pizzas,
+     ROUND(AVG(preparation_time),0) AS avg_preparation_minutes
 FROM cte
 GROUP BY number_of_pizzas
 
 -- Q3. What was the average distance travelled for each customer?
 
 SELECT 
-	customer_id, 
-	CONCAT(ROUND(AVG(distance),1), ' km') AS avg_distance
+     customer_id, 
+     CONCAT(ROUND(AVG(distance),1), ' km') AS avg_distance
 FROM customer_orders AS co
 JOIN runner_orders AS ro
   ON co.order_id = ro.order_id
@@ -163,18 +163,18 @@ ORDER BY customer_id
 -- Q4. What was the difference between the longest and shortest delivery times for all orders?
 
 SELECT 
-	MAX(duration) AS longest_delivery_time, 
-	MIN(duration) AS shortest_delivery_time,
-	MAX(duration) - MIN(duration) AS difference
+     MAX(duration) AS longest_delivery_time, 
+     MIN(duration) AS shortest_delivery_time,
+     MAX(duration) - MIN(duration) AS difference
 FROM runner_orders
 	
 -- Q5. What is the successful delivery percentage for each runner?
 
 SELECT 
-	runner_id,
-	CONCAT(100* SUM(CASE WHEN cancellation IS NULL THEN 1
-                         ELSE 0
-                    END)/COUNT(*), '%') AS successful_delivery
+     runner_id,
+     CONCAT(100* SUM(CASE WHEN cancellation IS NULL THEN 1
+                          ELSE 0
+                     END)/COUNT(*), '%') AS successful_delivery
 FROM runner_orders AS ro
 GROUP BY runner_id
 
@@ -209,9 +209,9 @@ LIMIT 1
 SELECT topping_name AS extra_topping, COUNT(exclusions) AS count
 FROM customer_orders AS co
 JOIN pizza_exclusions AS el
-ON co.serial_no = el.serial_no
+  ON co.serial_no = el.serial_no
 JOIN pizza_toppings AS pt
-ON el.exclusions = pt.topping_id
+  ON el.exclusions = pt.topping_id
 GROUP BY topping_name
 ORDER BY count DESC
 LIMIT 1
@@ -219,8 +219,8 @@ LIMIT 1
 -- Q4. What is the total quantity of each ingredient used in all delivered pizzas sorted by most frequent first?
 
 SELECT 
-	topping_name AS ingredient, 
-	COUNT(toppings) AS total_quantity
+     topping_name AS ingredient, 
+     COUNT(toppings) AS total_quantity
 FROM customer_orders AS co
 JOIN runner_orders AS ro
   ON co.order_id = ro.order_id
@@ -239,8 +239,8 @@ ORDER BY total_quantity DESC
 
 SELECT
     SUM(CASE WHEN pizza_name = 'Meatlovers' THEN 12
-	         WHEN pizza_name = 'Vegetarian' THEN 10
-	    END) AS revenue
+	     WHEN pizza_name = 'Vegetarian' THEN 10
+	END) AS revenue
 FROM customer_orders AS co
 JOIN runner_orders AS ro
   ON co.order_id = ro.order_id
@@ -253,8 +253,8 @@ WHERE cancellation IS NULL
 WITH cte AS 
      (SELECT 
           SUM(CASE WHEN pizza_id = 1 THEN 12
-	               WHEN pizza_id = 2 THEN 10
-	          END) AS revenue
+	           WHEN pizza_id = 2 THEN 10
+	      END) AS revenue
       FROM customer_orders AS co
       JOIN runner_orders AS ro
         ON co.order_id = ro.order_id
@@ -262,8 +262,8 @@ WITH cte AS
       UNION
       SELECT 
           SUM(CASE WHEN extras IS NOT NULL THEN 1
-	               ELSE 0
-	          END) AS revenue
+	           ELSE 0
+	      END) AS revenue
       FROM customer_orders AS co
       JOIN pizza_extras AS et
         ON co.serial_no = et.serial_no
@@ -301,9 +301,9 @@ customer_id, co.order_id, runner_id, rating, order_time, pickup_time, pickup_tim
 round(AVG(distance/duration*60),0) AS average_speed, COUNT(pizza_id) AS total_number_of_pizzas
 FROM customer_orders AS co
 JOIN runner_orders AS ro
-ON co.order_id = ro.order_id
+  ON co.order_id = ro.order_id
 JOIN runner_ratings AS rr
-ON co.order_id = rr.order_id
+  ON co.order_id = rr.order_id
 WHERE cancellation IS NULL
 GROUP BY 1,2,3,4,5,6,7,8
 ORDER BY customer_id
